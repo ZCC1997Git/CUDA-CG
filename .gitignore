@@ -1,3 +1,3 @@
-./vscode/*
-./output/*
-./obj/*
+.vscode
+output
+obj
