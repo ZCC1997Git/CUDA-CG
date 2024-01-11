@@ -35,6 +35,5 @@ void Output() {
     outfile2.close();
     outfile3.close();
 
-    Delete1D<CPU>(node_x);
-    Delete1D<CPU>(node_y);
+    Delete1Ds<CPU>(node_x, node_y);
 }

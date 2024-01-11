@@ -128,8 +128,8 @@ void CG(type_t** A,
 
     cudaMemcpy(x, gpu_x, LEN * sizeof(type_t), cudaMemcpyDeviceToHost);
     Delete2D<GPU>(gpu_A);
-    GpuDelete1D(gpu_x_all, gpu_b, gpu_r, gpu_r_tmp, gpu_tmp, gpu_p_all,
-                gpu_tmp_v);
+    Delete1Ds<GPU>(gpu_x_all, gpu_b, gpu_r, gpu_r_tmp, gpu_tmp, gpu_p_all,
+                   gpu_tmp_v);
 }
 
 void GetHardareInfo() {

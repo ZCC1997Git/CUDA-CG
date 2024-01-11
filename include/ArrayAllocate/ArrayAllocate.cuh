@@ -2,14 +2,37 @@
 #define __ARRARALLOCATE_
 #include <cuda_runtime.h>
 #include <iostream>
+#include <type_traits>
 
 /**
  * define the device
  */
 enum device { CPU = 0, GPU = 1 };
 
+/* This function check wather T is a pointer . */
+template <typename T>
+void checkIsPointer() {
+    static_assert(std::is_pointer<T>::value, "T must be a pointer type");
+}
+
+/* This function check wather T is a double pointer . */
+template <typename T>
+void checkIsDoublePointer() {
+    static_assert(
+        std::is_pointer<T>::value &&
+            std::is_pointer<typename std::remove_pointer<T>::type>::value,
+        "T must be a dual pointer type");
+}
+
+/*ensure T is not a ptr*/
+template <typename T>
+void checkIsNOPointer() {
+    static_assert(!std::is_pointer<T>::value, "T must not be a pointer type");
+}
+
 template <device Device, class T>
 T** Allocate2D(int M, int N, T** ref [[maybe_unused]] = nullptr) {
+    checkIsNOPointer<T>();
     if constexpr (Device == CPU) {
         T** tmp;
         tmp = new T*[M];
@@ -46,6 +69,7 @@ T** Allocate2D(int M, int N, T** ref [[maybe_unused]] = nullptr) {
 
 template <device Device, class T>
 void Delete2D(T** buf) {
+    checkIsNOPointer<T>();
     if constexpr (Device == CPU) {
         if (buf[0]) delete[] buf[0];
         if (buf) delete[] buf;
@@ -61,6 +85,7 @@ void Delete2D(T** buf) {
 
 template <device Device, class T>
 T* Allocate1D(int M, T* ref [[maybe_unused]] = nullptr) {
+    checkIsNOPointer<T>();
     if constexpr (Device == CPU) {
         T* tmp = new T[M];
         /*initialize the value to be 0*/
@@ -80,6 +105,7 @@ T* Allocate1D(int M, T* ref [[maybe_unused]] = nullptr) {
 
 template <device Device, class T>
 void Delete1D(T* buf) {
+    checkIsNOPointer<T>();
     if constexpr (Device == CPU) delete[] buf;
     else if constexpr (Device == GPU) cudaFree(buf);
     else {
@@ -87,8 +113,20 @@ void Delete1D(T* buf) {
     }
 }
 
-template <class... Vec>
-void GpuDelete1D(Vec... vec) {
-    (Delete1D<GPU>(vec), ...);
+/* This function deletes multiple 1D arrays on the specified device.
+ It uses variadic templates to accept an arbitrary number of arguments.
+ Each argument should be a pointer to a 1D array that was allocated on the
+device. Example usage: Delete1Ds<GPU>(buf1, buf2, buf3);
+*/
+template <device Device, class... Vec>
+void Delete1Ds(Vec... vec) {
+    (Delete1D<Device>(vec), ...);
 }
+
+/* This function deletes multiple 2D arrays on the specified device.*/
+template <device Device, class... Vec>
+void Delete2Ds(Vec... vec) {
+    (Delete2D<Device>(vec), ...);
+}
+
 #endif
